@@ -13,7 +13,7 @@ void main() async {
 }
 
 class MainApp extends StatelessWidget {
-  const  MainApp({super.key});
+  const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
