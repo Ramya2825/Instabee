@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -19,10 +20,23 @@ class _HomepageState extends State<Homepage> {
     String currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
+      backgroundColor: Color(0xFF101010),
       appBar: AppBar(
-        title: Text(
-          'InstaBee',
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+        backgroundColor: Color(0xFF101010),
+        elevation: 0,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+  
+            Text(
+              'InstaBee',
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
         ),
       ),
 
@@ -30,21 +44,36 @@ class _HomepageState extends State<Homepage> {
         stream: _firestore.collection('posts').snapshots(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return Center(child: Text('Something went wrong'));
+            return Center(
+              child: Text(
+                'Something went wrong',
+                style: TextStyle(color: Colors.white),
+              ),
+            );
           }
+
           if (!snapshot.hasData) {
-            return Center(child: CircularProgressIndicator());
+            return Center(
+              child: CircularProgressIndicator(color: Colors.amber),
+            );
           }
+
           var posts = snapshot.data!.docs.where((post) {
             String uid = post.data()['uid'] ?? '';
             return uid.isNotEmpty;
           }).toList();
 
           if (posts.isEmpty) {
-            return Center(child: Text('No posts available'));
+            return Center(
+              child: Text(
+                'No posts available',
+                style: TextStyle(color: Colors.white70, fontSize: 16),
+              ),
+            );
           }
 
           return ListView.builder(
+            padding: EdgeInsets.only(top: 10, bottom: 20),
             itemCount: posts.length,
             itemBuilder: (context, index) {
               var post = posts[index];
@@ -95,19 +124,20 @@ class _PostCardState extends State<PostCard> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   final TextEditingController commentController = TextEditingController();
- String get originalPostId {
-  var data = widget.post.data();
 
-  if (data['isReshare'] == true) {
-    String id = data['original_post_id'] ?? '';
+  String get originalPostId {
+    var data = widget.post.data();
 
-    if (id.isNotEmpty) {
-      return id;
+    if (data['isReshare'] == true) {
+      String? id = data['original_post_id'];
+
+      if (id != null && id.isNotEmpty) {
+        return id;
+      }
     }
-  }
 
-  return widget.postId;
-}
+    return widget.postId;
+  }
 
   Future<void> likePost() async {
     String myId = widget.currentUserId;
@@ -132,54 +162,77 @@ class _PostCardState extends State<PostCard> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Like failed')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Like failed')),
+      );
     }
   }
 
+  bool isResharing = false;
+
   Future<void> resharePost() async {
+    if (isResharing) return;
+
+    setState(() {
+      isResharing = true;
+    });
+
     String uid = widget.currentUserId;
 
-    var originalRef = _firestore.collection('posts').doc(originalPostId);
+    var postRef = _firestore.collection('posts').doc(originalPostId);
 
     var reshareRef = _firestore
-        .collection('posts')
-        .doc('${originalPostId}_$uid');
+        .collection('users')
+        .doc(uid)
+        .collection('reshared_posts')
+        .doc(originalPostId);
 
     try {
+      var postSnapshot = await postRef.get();
+
+      if (!postSnapshot.exists) {
+        throw Exception('Original post not found');
+      }
+
       var existing = await reshareRef.get();
 
       if (existing.exists) {
+        await reshareRef.delete();
+
+        await postRef.update({
+          'reshareCount': FieldValue.increment(-1),
+        });
+
         if (!mounted) return;
 
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Already reshared')));
-        return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Reshare Removed')),
+        );
+      } else {
+        await reshareRef.set({
+          'original_post_id': originalPostId,
+          'original_uid': postSnapshot.data()?['uid'],
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+
+        await postRef.update({
+          'reshareCount': FieldValue.increment(1),
+        });
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Post reshared Successfully')),
+        );
       }
-
-      var original = await originalRef.get();
-      if (!original.exists) return;
-      var postData = original.data()!;
-
-      await reshareRef.set({
-        'uid': uid,
-        // 'image_url': postData['image_url'] ?? '',
-        // 'content': postData['content'] ?? '',
-        // 'isReshare': true,
-        // 'original_post_id': originalPostId,
-        // 'original_uid': postData['uid'] ?? '',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      await originalRef.update({'reshareCount': FieldValue.increment(1)});
-      if (!mounted) return;
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Post reshared successfully')));
     } catch (e) {
-      if (!mounted) return;
-
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Reshare failed')));
+      print('RESHARE ERROR: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          isResharing = false;
+        });
+      }
     }
   }
 
@@ -208,17 +261,16 @@ class _PostCardState extends State<PostCard> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Save failed')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Save failed')),
+      );
     }
   }
 
   Future<void> commentPost() async {
     String comment = commentController.text.trim();
 
-    if (comment.isEmpty) {
-      return;
-    }
+    if (comment.isEmpty) return;
 
     try {
       await _firestore
@@ -232,13 +284,13 @@ class _PostCardState extends State<PostCard> {
           });
 
       commentController.clear();
-
       FocusScope.of(context).unfocus();
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Comment failed')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Comment failed')),
+      );
     }
   }
 
@@ -246,9 +298,11 @@ class _PostCardState extends State<PostCard> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: Colors.black26,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(22),
+        ),
       ),
       builder: (bottomContext) {
         return Padding(
@@ -263,10 +317,14 @@ class _PostCardState extends State<PostCard> {
 
                 Text(
                   'Comments',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 19,
+                    fontWeight: FontWeight.bold,
+                    color:Colors.white70
+                  ),
                 ),
 
-                Divider(),
+                Divider(color: Colors.white24),
 
                 Expanded(
                   child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -276,20 +334,33 @@ class _PostCardState extends State<PostCard> {
                         .collection('comments')
                         .orderBy('createdAt')
                         .snapshots(),
-
                     builder: (context, snapshot) {
                       if (snapshot.hasError) {
-                        return Center(child: Text('Unable to load comments'));
+                        return Center(
+                          child: Text(
+                            'Unable to load comments',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        );
                       }
 
                       if (!snapshot.hasData) {
-                        return Center(child: CircularProgressIndicator());
+                        return Center(
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                          ),
+                        );
                       }
 
                       var comments = snapshot.data!.docs;
 
                       if (comments.isEmpty) {
-                        return Center(child: Text('No comments yet'));
+                        return Center(
+                          child: Text(
+                            'No comments yet',
+                            style: TextStyle(color: Colors.white70),
+                          ),
+                        );
                       }
 
                       return ListView.builder(
@@ -297,26 +368,22 @@ class _PostCardState extends State<PostCard> {
                         itemBuilder: (context, index) {
                           var comment = comments[index];
 
-                          String commentUid = comment.data()['uid'] ?? '';
+                          String commentUid =
+                              comment.data()['uid'] ?? '';
 
                           if (commentUid.isEmpty) {
                             return SizedBox();
                           }
 
                           return FutureBuilder<
-                            DocumentSnapshot<Map<String, dynamic>>
-                          >(
+                              DocumentSnapshot<Map<String, dynamic>>>(
                             future: _firestore
                                 .collection('users')
                                 .doc(commentUid)
                                 .get(),
-
                             builder: (context, userSnapshot) {
-                              if (!userSnapshot.hasData) {
-                                return SizedBox();
-                              }
-
-                              if (!userSnapshot.data!.exists) {
+                              if (!userSnapshot.hasData ||
+                                  !userSnapshot.data!.exists) {
                                 return SizedBox();
                               }
 
@@ -324,15 +391,25 @@ class _PostCardState extends State<PostCard> {
 
                               return ListTile(
                                 leading: CircleAvatar(
-                                  child: Icon(Icons.person),
+                                  backgroundColor: Colors.white,
+                                  child: Icon(
+                                    Icons.person,
+                                    color: Colors.black,
+                                  ),
                                 ),
-
                                 title: Text(
                                   user['user_name'] ?? 'User',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
                                 ),
-
-                                subtitle: Text(comment.data()['comment'] ?? ''),
+                                subtitle: Text(
+                                  comment.data()['comment'] ?? '',
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                  ),
+                                ),
                               );
                             },
                           );
@@ -342,18 +419,24 @@ class _PostCardState extends State<PostCard> {
                   ),
                 ),
 
-                Divider(),
+                Divider(color: Colors.white24),
+
                 Padding(
-                  padding: EdgeInsets.all(10),
+                  padding: EdgeInsets.all(12),
                   child: Row(
                     children: [
                       Expanded(
                         child: TextField(
                           controller: commentController,
+                          style: TextStyle(color: Colors.white),
                           decoration: InputDecoration(
                             hintText: 'Add a comment...',
+                            hintStyle: TextStyle(color: Colors.white54),
+                            filled: true,
+                            fillColor: Color(0xFF303030),
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(25),
+                              borderSide: BorderSide.none,
                             ),
                           ),
                         ),
@@ -361,7 +444,10 @@ class _PostCardState extends State<PostCard> {
 
                       IconButton(
                         onPressed: commentPost,
-                        icon: Icon(Icons.send, color: Colors.blue),
+                        icon: Icon(
+                          Icons.send,
+                          color: Colors.white,
+                        ),
                       ),
                     ],
                   ),
@@ -380,8 +466,9 @@ class _PostCardState extends State<PostCard> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Delete failed')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Delete failed')),
+      );
     }
   }
 
@@ -390,8 +477,15 @@ class _PostCardState extends State<PostCard> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          title: Text('Delete Post'),
-          content: Text('Do you want to delete this post?'),
+          backgroundColor: Color(0xFF252525),
+          title: Text(
+            'Delete Post',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Text(
+            'Do you want to delete this post?',
+            style: TextStyle(color: Colors.white70),
+          ),
           actions: [
             TextButton(
               onPressed: () {
@@ -399,13 +493,15 @@ class _PostCardState extends State<PostCard> {
               },
               child: Text('Cancel'),
             ),
-
             TextButton(
               onPressed: () async {
                 Navigator.pop(dialogContext);
                 await deletePost();
               },
-              child: Text('Delete', style: TextStyle(color: Colors.red)),
+              child: Text(
+                'Delete',
+                style: TextStyle(color: Colors.redAccent),
+              ),
             ),
           ],
         );
@@ -423,7 +519,6 @@ class _PostCardState extends State<PostCard> {
   Widget build(BuildContext context) {
     return FutureBuilder<DocumentSnapshot<Map<String, dynamic>>>(
       future: _firestore.collection('users').doc(widget.uid).get(),
-
       builder: (context, userSnapshot) {
         if (!userSnapshot.hasData || !userSnapshot.data!.exists) {
           return SizedBox();
@@ -431,225 +526,289 @@ class _PostCardState extends State<PostCard> {
 
         var user = userSnapshot.data!.data()!;
         String profileUrl = user['profile_url'] ?? '';
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ListTile(
-              leading: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Targetpage(
-                        uid: widget.uid,
-                        currentUserId: widget.currentUserId,
+
+        return Container(
+          margin: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: Color(0xFF1C1C1C),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 3,
+                ),
+                leading: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Targetpage(
+                          uid: widget.uid,
+                          currentUserId: widget.currentUserId,
+                        ),
                       ),
+                    );
+                  },
+                  child: CircleAvatar(
+                    radius: 22,
+                    backgroundColor: Colors.white,
+                    backgroundImage: profileUrl.isNotEmpty
+                        ? NetworkImage(profileUrl)
+                        : null,
+                    child: profileUrl.isEmpty
+                        ? Icon(Icons.person, color: Colors.black)
+                        : null,
+                  ),
+                ),
+                title: GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Targetpage(
+                          uid: widget.uid,
+                          currentUserId: widget.currentUserId,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    user['user_name'] ?? 'User',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 15,
                     ),
-                  );
-                },
-                child: CircleAvatar(
-                  backgroundImage: profileUrl.isNotEmpty
-                      ? NetworkImage(profileUrl)
-                      : null,
-                  child: profileUrl.isEmpty ? Icon(Icons.person) : null,
+                  ),
+                ),
+                trailing: widget.uid == widget.currentUserId
+                    ? IconButton(
+                        onPressed: confirmDelete,
+                        icon: Icon(
+                          Icons.more_vert,
+                          color: Colors.white,
+                        ),
+                      )
+                    : SizedBox(),
+              ),
+
+              ClipRRect(
+                borderRadius: BorderRadius.circular(0),
+                child: Image.network(
+                  widget.image,
+                  width: double.infinity,
+                  height: 400,
+                  fit: BoxFit.cover,
+                  filterQuality: FilterQuality.high,
                 ),
               ),
 
-              title: GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Targetpage(
-                        uid: widget.uid,
-                        currentUserId: widget.currentUserId,
-                      ),
-                    ),
-                  );
-                },
-                child: Text(
-                  user['user_name'] ?? 'User',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ),
-
-              trailing: widget.uid == widget.currentUserId
-                  ? IconButton(
-                      onPressed: confirmDelete,
-                      icon: Icon(Icons.more_vert),
-                    )
-                  : SizedBox(),
-            ),
-            Image.network(
-              widget.image,
-              width: double.infinity,
-              height: 450,
-              fit: BoxFit.cover,
-              filterQuality: FilterQuality.high,
-            ),
-            Row(
-              children: [
-                StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                  stream: _firestore
-                      .collection('posts')
-                      .doc(widget.postId)
-                      .collection('likes')
-                      .snapshots(),
-
-                  builder: (context, snapshot) {
-                    if (snapshot.hasError) {
-                      return Text('Error loading likes');
-                    }
-
-                    if (!snapshot.hasData) {
-                      return CircularProgressIndicator();
-                    }
-
-                    var likes = snapshot.data!.docs;
-
-                    bool isLiked = likes.any(
-                      (like) => like.id == widget.currentUserId,
-                    );
-
-                    return Row(
-                      children: [
-                        IconButton(
-                          onPressed: likePost,
-                          icon: SvgPicture.asset(
-                            isLiked
-                                ? 'assets/icons/like_fill.svg'
-                                : 'assets/icons/like.svg',
-                            width: 25,
-                            height: 25,
-                          ),
-                        ),
-
-                        Text(
-                          '${likes.length}',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                  stream: _firestore
-                      .collection('posts')
-                      .doc(widget.postId)
-                      .collection('comments')
-                      .snapshots(),
-
-                  builder: (context, snapshot) {
-                    int commentCount = 0;
-
-                    if (snapshot.hasData) {
-                      commentCount = snapshot.data!.docs.length;
-                    }
-
-                    return Row(
-                      children: [
-                        IconButton(
-                          onPressed: showComments,
-                          icon: SvgPicture.asset(
-                            'assets/icons/comments.svg',
-                            height: 25,
-                            width: 25,
-                          ),
-                        ),
-
-                        Text(
-                          '$commentCount',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-
-                StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                  stream: _firestore
-                      .collection('posts')
-                      .doc(originalPostId)
-                      .snapshots(),
-
-                  builder: (context, snapshot) {
-                    int count = 0;
-
-                    if (snapshot.hasData && snapshot.data!.exists) {
-                      count = (snapshot.data!.data()?['reshareCount'] ?? 0);
-                    }
-
-                    return Row(
-                      children: [
-                        IconButton(
-                          onPressed: resharePost,
-                          icon: SvgPicture.asset(
-                            'assets/icons/reshare.svg',
-                            height: 25,
-                            width: 25,
-                          ),
-                        ),
-
-                        Text(
-                          '$count',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                Spacer(),
-                StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                  stream: _firestore
-                      .collection('users')
-                      .doc(widget.currentUserId)
-                      .collection('saved_posts')
-                      .doc(originalPostId)
-                      .snapshots(),
-
-                  builder: (context, snapshot) {
-                    bool isSaved = snapshot.data?.exists ?? false;
-
-                    return IconButton(
-                      onPressed: savePost,
-                      icon: SvgPicture.asset(
-                        'assets/icons/saved.svg',
-                        height: 25,
-                        width: 25,
-                        colorFilter: ColorFilter.mode(
-                          isSaved ? Colors.white : Colors.black,
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-
-            SizedBox(height: 5),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-              child: RichText(
-                text: TextSpan(
-                  style: TextStyle(color: Colors.black, fontSize: 14),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                child: Row(
                   children: [
-                    TextSpan(
-                      text: '${user['user_name'] ?? 'User'} ',
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      stream: _firestore
+                          .collection('posts')
+                          .doc(widget.postId)
+                          .collection('likes')
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return Text(
+                            'Error loading likes',
+                            style: TextStyle(color: Colors.white),
+                          );
+                        }
+
+                        if (!snapshot.hasData) {
+                          return SizedBox(
+                            width: 35,
+                            height: 35,
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                color: Colors.amber,
+                                strokeWidth: 2,
+                              ),
+                            ),
+                          );
+                        }
+
+                        var likes = snapshot.data!.docs;
+
+                        bool isLiked = likes.any(
+                          (like) => like.id == widget.currentUserId,
+                        );
+
+                        return Row(
+                          children: [
+                            IconButton(
+                              onPressed: likePost,
+                              icon: SvgPicture.asset(
+                                isLiked
+                                    ? 'assets/icons/like_fill.svg'
+                                    : 'assets/icons/like.svg',
+                                width: 25,
+                                height: 25,
+                                colorFilter: ColorFilter.mode(
+                                  isLiked ? Colors.redAccent : Colors.white,
+                                  BlendMode.srcIn,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '${likes.length}',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
                     ),
 
-                    TextSpan(
-                      text: widget.content,
-                      style: TextStyle(fontWeight: FontWeight.normal),
+                    StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      stream: _firestore
+                          .collection('posts')
+                          .doc(widget.postId)
+                          .collection('comments')
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        int commentCount = 0;
+
+                        if (snapshot.hasData) {
+                          commentCount = snapshot.data!.docs.length;
+                        }
+
+                        return Row(
+                          children: [
+                            IconButton(
+                              onPressed: showComments,
+                              icon: SvgPicture.asset(
+                                'assets/icons/comments.svg',
+                                height: 25,
+                                width: 25,
+                                colorFilter: ColorFilter.mode(
+                                  Colors.white,
+                                  BlendMode.srcIn,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '$commentCount',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+
+                    StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                      stream: _firestore
+                          .collection('posts')
+                          .doc(originalPostId)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        int count = 0;
+
+                        if (snapshot.hasData && snapshot.data!.exists) {
+                          count = snapshot.data!.data()?['reshareCount'] ?? 0;
+                        }
+
+                        return Row(
+                          children: [
+                            IconButton(
+                              onPressed: isResharing ? null : resharePost,
+                              icon: SvgPicture.asset(
+                                'assets/icons/reshare.svg',
+                                height: 25,
+                                width: 25,
+                                colorFilter: ColorFilter.mode(
+                                  Colors.white,
+                                  BlendMode.srcIn,
+                                ),
+                              ),
+                            ),
+                            Text(
+                              '$count',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+
+                    Spacer(),
+
+                    StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                      stream: _firestore
+                          .collection('users')
+                          .doc(widget.currentUserId)
+                          .collection('saved_posts')
+                          .doc(originalPostId)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        bool isSaved = snapshot.data?.exists ?? false;
+
+                        return IconButton(
+                          onPressed: savePost,
+                          icon: SvgPicture.asset(
+                            'assets/icons/saved.svg',
+                            height: 25,
+                            width: 25,
+                            colorFilter: ColorFilter.mode(
+                              isSaved ? Colors.amber : Colors.white,
+                              BlendMode.srcIn,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ],
                 ),
               ),
-            ),
 
-            Divider(),
-          ],
+              Padding(
+                padding: EdgeInsets.fromLTRB(15, 5, 15, 15),
+                child: RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
+                    children: [
+                      TextSpan(
+                        text: '${user['user_name'] ?? 'User'} ',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      TextSpan(
+                        text: widget.content,
+                        style: TextStyle(
+                          fontWeight: FontWeight.normal,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         );
       },
     );
