@@ -60,7 +60,7 @@ class _ProfilePageState extends State<ProfilePage>
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('InstaUser', style: TextStyle(fontWeight: FontWeight.bold)),
+        backgroundColor: Colors.black,
         actions: [
           IconButton(
             onPressed: () {
@@ -75,7 +75,7 @@ class _ProfilePageState extends State<ProfilePage>
                 ),
               );
             },
-            icon: Icon(Icons.add_box_outlined),
+            icon: Icon(Icons.add_box_outlined, color: Colors.white, size: 30),
           ),
           IconButton(
             onPressed: () {
@@ -90,11 +90,13 @@ class _ProfilePageState extends State<ProfilePage>
                 ),
               );
             },
-            icon: Icon(Icons.menu),
+            icon: Icon(Icons.menu, color: Colors.white, size: 30),
           ),
           SizedBox(width: 10),
         ],
       ),
+      backgroundColor: Colors.black,
+
       body: Column(
         children: [
           StreamBuilder(
@@ -111,14 +113,15 @@ class _ProfilePageState extends State<ProfilePage>
               String name = user['name'] ?? '';
               String bio = user['bio'] ?? '';
               String profileUrl = user['profile_url'] ?? '';
+              String username = user['user_name'] ?? '';
 
               int followers = (user['followersCount'] ?? 0);
               int following = (user['followingCount'] ?? 0);
-
+              SizedBox(height: 0);
               return Column(
                 children: [
                   Padding(
-                    padding: EdgeInsets.all(15),
+                    padding: EdgeInsets.all(10),
                     child: Row(
                       children: [
                         CircleAvatar(
@@ -163,9 +166,13 @@ class _ProfilePageState extends State<ProfilePage>
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 18,
+                                          color: Colors.white,
                                         ),
                                       ),
-                                      Text('Posts'),
+                                      Text(
+                                        'Posts',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
                                     ],
                                   ),
                                   Column(
@@ -175,9 +182,13 @@ class _ProfilePageState extends State<ProfilePage>
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 18,
+                                          color: Colors.white,
                                         ),
                                       ),
-                                      Text('Followers'),
+                                      Text(
+                                        'Followers',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
                                     ],
                                   ),
                                   Column(
@@ -187,9 +198,13 @@ class _ProfilePageState extends State<ProfilePage>
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
                                           fontSize: 18,
+                                          color: Colors.white,
                                         ),
                                       ),
-                                      Text('Following'),
+                                      Text(
+                                        'Following',
+                                        style: TextStyle(color: Colors.white),
+                                      ),
                                     ],
                                   ),
                                 ],
@@ -209,13 +224,16 @@ class _ProfilePageState extends State<ProfilePage>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            name,
+                            '@$username',
                             style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 15,
+                              fontSize: 14,
+                              color: Colors.orange,
                             ),
                           ),
-                          Text(bio),
+
+                          SizedBox(height: 5),
+
+                          Text(bio, style: TextStyle(color: Colors.white)),
                         ],
                       ),
                     ),
@@ -268,32 +286,35 @@ class _ProfilePageState extends State<ProfilePage>
             },
           ),
 
-          SizedBox(height: 10),
+          SizedBox(height: 5),
           TabBar(
             controller: tabController,
-            labelColor: Colors.black,
-            unselectedLabelColor: Colors.grey,
-            indicatorColor: Colors.black,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.black,
+            indicatorColor: Colors.orange,
             tabs: [
               Tab(
                 icon: SvgPicture.asset(
                   'assets/icons/posts.svg',
-                  height: 24,
-                  width: 24,
+                  height: 30,
+                  width: 30,
+                  color: Colors.white,
                 ),
               ),
               Tab(
                 icon: SvgPicture.asset(
                   'assets/icons/reshare.svg',
-                  height: 24,
-                  width: 24,
+                  height: 28,
+                  width: 28,
+                  color: Colors.white,
                 ),
               ),
               Tab(
                 icon: SvgPicture.asset(
-                  'assets/icons/saved.svg',
+                  'assets/icons/unbookmark.svg',
                   height: 24,
                   width: 24,
+                  color: Colors.white,
                 ),
               ),
             ],
@@ -319,69 +340,62 @@ class _ProfilePageState extends State<ProfilePage>
                     return postGrid(posts);
                   },
                 ),
-              
-StreamBuilder(
-  stream: _firestore
-      .collection('users')
-      .doc(currentUserId)
-      .collection('reshared_posts')
-      .snapshots(),
 
-  builder: (context, snapshot) {
+                StreamBuilder(
+                  stream: _firestore
+                      .collection('users')
+                      .doc(currentUserId)
+                      .collection('reshared_posts')
+                      .snapshots(),
 
-    if (!snapshot.hasData) {
-      return Center(child: CircularProgressIndicator());
-    }
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return Center(child: CircularProgressIndicator());
+                    }
 
-    var reshares = snapshot.data!.docs;
+                    var reshares = snapshot.data!.docs;
 
-    if (reshares.isEmpty) {
-      return Center(
-        child: Text('No reshared posts yet'),
-      );
-    }
+                    if (reshares.isEmpty) {
+                      return Center(child: Text('No reshared posts yet'));
+                    }
 
-    return GridView.builder(
-      itemCount: reshares.length,
+                    return GridView.builder(
+                      itemCount: reshares.length,
 
-      gridDelegate:
-          SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: 2,
-        mainAxisSpacing: 2,
-      ),
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 2,
+                        mainAxisSpacing: 2,
+                        
+                      ),
 
-      itemBuilder: (context, index) {
+                      itemBuilder: (context, index) {
+                        String postId = reshares[index]['original_post_id'];
 
-        String postId =
-            reshares[index]['original_post_id'];
+                        return FutureBuilder(
+                          future: _firestore
+                              .collection('posts')
+                              .doc(postId)
+                              .get(),
 
-        return FutureBuilder(
-          future: _firestore
-              .collection('posts')
-              .doc(postId)
-              .get(),
+                          builder: (context, postSnapshot) {
+                            if (!postSnapshot.hasData ||
+                                !postSnapshot.data!.exists) {
+                              return SizedBox();
+                            }
 
-          builder: (context, postSnapshot) {
+                            var data = postSnapshot.data!.data()!;
 
-            if (!postSnapshot.hasData ||
-                !postSnapshot.data!.exists) {
-              return SizedBox();
-            }
-
-            var data = postSnapshot.data!.data()!;
-
-            return Image.network(
-              data['image_url'] ?? '',
-              fit: BoxFit.cover,
-            );
-          },
-        );
-      },
-    );
-  },
-)
-,
+                            return Image.network(
+                              data['image_url'] ?? '',
+                              fit: BoxFit.cover,
+                            );
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
                 StreamBuilder(
                   stream: _firestore
                       .collection('users')

@@ -8,10 +8,8 @@ import 'package:socialmedia_project/Logpages/loginpage.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
   runApp(const MainApp());
 }
-
 class MainApp extends StatelessWidget {
   const MainApp({super.key});
 
@@ -26,9 +24,7 @@ class MainApp extends StatelessWidget {
   Widget checkAuth() {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser != null) {
-
       return  Socialmedia();
-    
     }
     return Loginpage();
   }

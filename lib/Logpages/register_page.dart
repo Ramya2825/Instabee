@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:socialmedia_project/instabee.dart';
 import 'package:socialmedia_project/Logpages/loginpage.dart';
 
@@ -20,256 +21,370 @@ class _RegisterPageState extends State<RegisterPage> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final auth = FirebaseAuth.instance;
 
+  bool isLoading = false;
+  bool showPassword = false;
+
   Future<void> register(
     String email,
     String password,
     String fullName,
     String username,
   ) async {
+    if (email.trim().isEmpty ||
+        password.isEmpty ||
+        fullName.trim().isEmpty ||
+        username.trim().isEmpty) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Please fill all the fields')));
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
     try {
-      await auth.createUserWithEmailAndPassword(
-        email: email,
+      UserCredential userCredential = await auth.createUserWithEmailAndPassword(
+        email: email.trim(),
         password: password,
       );
 
-      if (auth.currentUser?.uid != null) {
-        _firestore.collection('users').doc(auth.currentUser?.uid).set({
-          'email': email,
-          'user_name': username,
-          'full_name': fullName,
-          'uid': auth.currentUser?.uid,
-        });
-      }
+      String uid = userCredential.user!.uid;
 
-      Navigator.push(
+      await _firestore.collection('users').doc(uid).set({
+        'email': email.trim(),
+        'user_name': username.trim(),
+        'full_name': fullName.trim(),
+        'uid': uid,
+      });
+
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => Socialmedia()),
       );
     } on FirebaseAuthException catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('login failed')));
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.message ?? 'Registration failed'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Something went wrong'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    emailcontroller.dispose();
+    namecontroller.dispose();
+    usernamecontroller.dispose();
+    passwordcontroller.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xffF8F7FF),
+      backgroundColor: Colors.black,
       body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            child: Container(
-              padding: EdgeInsets.all(28),
-              margin: EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(25),
-                boxShadow: [BoxShadow(color: Colors.grey, blurRadius: 25)],
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(height: 10),
-                  Text(
-                    'Create an account',
-                    style: TextStyle(
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.symmetric(horizontal: 25, vertical: 25),
+            child: Column(
+              children: [
+                Text(
+                  'Create Account',
+                  style: GoogleFonts.poppins(
+                    fontSize: 23,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+
+                SizedBox(height: 5),
+
+                Text(
+                  'Join InstaBee and share your moments',
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
+                ),
+
+                SizedBox(height: 30),
+
+                // REGISTER CARD
+                Container(
+                  width: double.infinity,
+                  padding: EdgeInsets.all(22),
+                  decoration: BoxDecoration(
+                    color: Color(0xff181818),
+                    borderRadius: BorderRadius.circular(25),
+                    border: Border.all(color: Colors.white12),
                   ),
 
-                  SizedBox(height: 8),
-
-                  Text(
-                    'Sign up to see photos and videos from your friends.',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 13, color: Colors.grey),
-                  ),
-
-                  SizedBox(height: 30),
-
-                  // Facebook Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton.icon(
-                      onPressed: () {},
-                      icon: Icon(Icons.facebook, color: Colors.white),
-                      label: Text(
-                        'Continue with Facebook',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(0xff1877F2),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        elevation: 0,
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 25),
-                  Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(child: Divider()),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 15),
-                        child: Text('OR', style: TextStyle(color: Colors.grey)),
-                      ),
-                      Expanded(child: Divider()),
-                    ],
-                  ),
-
-                  SizedBox(height: 25),
-                  TextField(
-                    controller: emailcontroller,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      hintText: 'Mobile Number or Email',
-                      prefixIcon: Icon(
-                        Icons.email_outlined,
-                        color: Colors.deepPurple,
-                      ),
-                      filled: true,
-                      fillColor: Color(0xffF5F3FA),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 15),
-                  TextField(
-                    controller: namecontroller,
-                    decoration: InputDecoration(
-                      hintText: 'Full Name',
-                      prefixIcon: Icon(
-                        Icons.person_outline,
-                        color: Colors.deepPurple,
-                      ),
-                      filled: true,
-                      fillColor: Color(0xffF5F3FA),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 15),
-                  TextField(
-                    controller: usernamecontroller,
-                    decoration: InputDecoration(
-                      hintText: 'Username',
-                      prefixIcon: Icon(
-                        Icons.alternate_email,
-                        color: Colors.deepPurple,
-                      ),
-                      filled: true,
-                      fillColor: Color(0xffF5F3FA),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 15),
-                  TextField(
-                    controller: passwordcontroller,
-                    obscureText: true,
-                    decoration: InputDecoration(
-                      hintText: 'Password',
-                      prefixIcon: Icon(
-                        Icons.lock_outline,
-                        color: Colors.deepPurple,
-                      ),
-                      filled: true,
-                      fillColor: Color(0xffF5F3FA),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(14),
-                        borderSide: BorderSide.none,
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 25),
-                  Container(
-                    width: double.infinity,
-                    height: 55,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.deepPurple, Colors.purpleAccent],
-                      ),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: ElevatedButton(
-                      onPressed: () {
-                        register(
-                          emailcontroller.text,
-                          passwordcontroller.text,
-                          namecontroller.text,
-                          usernamecontroller.text,
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
-                        ),
-                      ),
-                      child: Text(
-                        'SIGN UP',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(height: 25),
-                  Divider(),
-                  SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
+                      // EMAIL
                       Text(
-                        'Have an account?',
-                        style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+                        'Email Address',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
 
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => Loginpage(),
-                            ),
-                          );
-                        },
-                        child: Text(
-                          'Log in',
-                          style: TextStyle(
-                            color: Colors.deepPurple,
-                            fontWeight: FontWeight.bold,
+                      SizedBox(height: 10),
+
+                      TextField(
+                        controller: emailcontroller,
+                        keyboardType: TextInputType.emailAddress,
+                        style: TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: 'Enter your email',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          prefixIcon: Icon(
+                            Icons.email_outlined,
+                            color: Colors.orange,
+                          ),
+                          filled: true,
+                          fillColor: Color(0xff252525),
+                          contentPadding: EdgeInsets.symmetric(vertical: 17),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
                           ),
                         ),
                       ),
+
+                      SizedBox(height: 20),
+
+                      // FULL NAME
+                      Text(
+                        'Full Name',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+
+                      SizedBox(height: 10),
+
+                      TextField(
+                        controller: namecontroller,
+                        style: TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: 'Enter your full name',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          prefixIcon: Icon(
+                            Icons.person_outline,
+                            color: Colors.orange,
+                          ),
+                          filled: true,
+                          fillColor: Color(0xff252525),
+                          contentPadding: EdgeInsets.symmetric(vertical: 17),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 20),
+
+                      // USERNAME
+                      Text(
+                        'Username',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+
+                      SizedBox(height: 10),
+
+                      TextField(
+                        controller: usernamecontroller,
+                        style: TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: 'Choose a username',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          prefixIcon: Icon(
+                            Icons.alternate_email,
+                            color: Colors.orange,
+                          ),
+                          filled: true,
+                          fillColor: Color(0xff252525),
+                          contentPadding: EdgeInsets.symmetric(vertical: 17),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 20),
+
+                      // PASSWORD
+                      Text(
+                        'Password',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+
+                      SizedBox(height: 10),
+
+                      TextField(
+                        controller: passwordcontroller,
+                        obscureText: !showPassword,
+                        style: TextStyle(color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: 'Create a password',
+                          hintStyle: TextStyle(color: Colors.grey),
+                          prefixIcon: Icon(
+                            Icons.lock_outline,
+                            color: Colors.orange,
+                          ),
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                showPassword = !showPassword;
+                              });
+                            },
+                            icon: Icon(
+                              showPassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                              color: Colors.grey,
+                            ),
+                          ),
+                          filled: true,
+                          fillColor: Color(0xff252525),
+                          contentPadding: EdgeInsets.symmetric(vertical: 17),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: 30),
+
+                      // SIGN UP BUTTON
+                      SizedBox(
+                        width: double.infinity,
+                        height: 53,
+                        child: ElevatedButton(
+                          onPressed: isLoading
+                              ? null
+                              : () {
+                                  register(
+                                    emailcontroller.text,
+                                    passwordcontroller.text,
+                                    namecontroller.text,
+                                    usernamecontroller.text,
+                                  );
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.orange,
+                            disabledBackgroundColor: Colors.orange.shade200,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: isLoading
+                              ? CircularProgressIndicator(color: Colors.black)
+                              : Text(
+                                  'CREATE ACCOUNT',
+                                  style: GoogleFonts.poppins(
+                                    color: Colors.black,
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                        ),
+                      ),
+
+                      SizedBox(height: 25),
+
+                      Row(
+                        children: [
+                          Expanded(child: Divider(color: Colors.white24)),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 15),
+                            child: Text(
+                              'OR',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          Expanded(child: Divider(color: Colors.white24)),
+                        ],
+                      ),
+
+                      SizedBox(height: 3),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            'Already have an account?',
+                            style: GoogleFonts.poppins(
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
+                          ),
+
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => Loginpage(),
+                                ),
+                              );
+                            },
+                            child: Text(
+                              'Log In',
+                              style: GoogleFonts.poppins(
+                                color: Colors.orange,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),

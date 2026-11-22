@@ -9,7 +9,7 @@ plugins {
 
 android {
     namespace = "com.example.socialmedia_project"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

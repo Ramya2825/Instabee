@@ -1,9 +1,10 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:socialmedia_project/Allhomepages/targetpage.dart';
+import 'package:socialmedia_project/map_page.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -20,24 +21,64 @@ class _HomepageState extends State<Homepage> {
     String currentUserId = FirebaseAuth.instance.currentUser!.uid;
 
     return Scaffold(
-      backgroundColor: Color(0xFF101010),
+      backgroundColor: Colors.black,
+
       appBar: AppBar(
-        backgroundColor: Color(0xFF101010),
-        elevation: 0,
+        backgroundColor: Colors.black,
+
+        leading: Padding(
+          padding: EdgeInsets.all(12),
+
+          child: Image.asset(
+            'assets/icons/logo.png',
+            width: 130,
+            height: 60,
+            fit: BoxFit.fill,
+          ),
+        ),
+
         title: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-  
-            Text(
-              'InstaBee',
-              style: TextStyle(
-                fontSize: 26,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
+            Center(
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: 'Insta',
+                      style: GoogleFonts.orbitron(
+                        fontSize: 21,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    TextSpan(
+                      text: 'Bee',
+                      style: GoogleFonts.orbitron(
+                        fontSize: 25,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.orange,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => BeeNearbyPage()),
+              );
+            },
+            icon: Icon(Icons.location_on, color: Colors.orange, size: 35),
+          ),
+        ],
       ),
 
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
@@ -53,9 +94,7 @@ class _HomepageState extends State<Homepage> {
           }
 
           if (!snapshot.hasData) {
-            return Center(
-              child: CircularProgressIndicator(color: Colors.amber),
-            );
+            return Center(child: CircularProgressIndicator());
           }
 
           var posts = snapshot.data!.docs.where((post) {
@@ -162,14 +201,12 @@ class _PostCardState extends State<PostCard> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Like failed')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Like failed')));
     }
   }
 
   bool isResharing = false;
-
   Future<void> resharePost() async {
     if (isResharing) return;
 
@@ -199,15 +236,12 @@ class _PostCardState extends State<PostCard> {
       if (existing.exists) {
         await reshareRef.delete();
 
-        await postRef.update({
-          'reshareCount': FieldValue.increment(-1),
-        });
+        await postRef.update({'reshareCount': FieldValue.increment(-1)});
 
         if (!mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Reshare Removed')),
-        );
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Reshare Removed')));
       } else {
         await reshareRef.set({
           'original_post_id': originalPostId,
@@ -215,15 +249,13 @@ class _PostCardState extends State<PostCard> {
           'createdAt': FieldValue.serverTimestamp(),
         });
 
-        await postRef.update({
-          'reshareCount': FieldValue.increment(1),
-        });
+        await postRef.update({'reshareCount': FieldValue.increment(1)});
 
         if (!mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Post reshared Successfully')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Post reshared Successfully')));
       }
     } catch (e) {
       print('RESHARE ERROR: $e');
@@ -261,9 +293,13 @@ class _PostCardState extends State<PostCard> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Save failed')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Saved Collection')));
+    } finally{
+       if (!mounted) return;
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('UnSaved Collection')));
     }
   }
 
@@ -288,9 +324,8 @@ class _PostCardState extends State<PostCard> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Comment failed')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Comment failed')));
     }
   }
 
@@ -300,9 +335,7 @@ class _PostCardState extends State<PostCard> {
       isScrollControlled: true,
       backgroundColor: Colors.black26,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(22),
-        ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
       ),
       builder: (bottomContext) {
         return Padding(
@@ -320,7 +353,7 @@ class _PostCardState extends State<PostCard> {
                   style: TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.bold,
-                    color:Colors.white70
+                    color: Colors.white70,
                   ),
                 ),
 
@@ -346,9 +379,7 @@ class _PostCardState extends State<PostCard> {
 
                       if (!snapshot.hasData) {
                         return Center(
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                          ),
+                          child: CircularProgressIndicator(color: Colors.white),
                         );
                       }
 
@@ -368,15 +399,15 @@ class _PostCardState extends State<PostCard> {
                         itemBuilder: (context, index) {
                           var comment = comments[index];
 
-                          String commentUid =
-                              comment.data()['uid'] ?? '';
+                          String commentUid = comment.data()['uid'] ?? '';
 
                           if (commentUid.isEmpty) {
                             return SizedBox();
                           }
 
                           return FutureBuilder<
-                              DocumentSnapshot<Map<String, dynamic>>>(
+                            DocumentSnapshot<Map<String, dynamic>>
+                          >(
                             future: _firestore
                                 .collection('users')
                                 .doc(commentUid)
@@ -406,9 +437,7 @@ class _PostCardState extends State<PostCard> {
                                 ),
                                 subtitle: Text(
                                   comment.data()['comment'] ?? '',
-                                  style: TextStyle(
-                                    color: Colors.white70,
-                                  ),
+                                  style: TextStyle(color: Colors.white70),
                                 ),
                               );
                             },
@@ -444,10 +473,7 @@ class _PostCardState extends State<PostCard> {
 
                       IconButton(
                         onPressed: commentPost,
-                        icon: Icon(
-                          Icons.send,
-                          color: Colors.white,
-                        ),
+                        icon: Icon(Icons.send, color: Colors.white),
                       ),
                     ],
                   ),
@@ -466,9 +492,8 @@ class _PostCardState extends State<PostCard> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Delete failed')),
-      );
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Delete failed')));
     }
   }
 
@@ -478,10 +503,7 @@ class _PostCardState extends State<PostCard> {
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: Color(0xFF252525),
-          title: Text(
-            'Delete Post',
-            style: TextStyle(color: Colors.white),
-          ),
+          title: Text('Delete Post', style: TextStyle(color: Colors.white)),
           content: Text(
             'Do you want to delete this post?',
             style: TextStyle(color: Colors.white70),
@@ -498,10 +520,7 @@ class _PostCardState extends State<PostCard> {
                 Navigator.pop(dialogContext);
                 await deletePost();
               },
-              child: Text(
-                'Delete',
-                style: TextStyle(color: Colors.redAccent),
-              ),
+              child: Text('Delete', style: TextStyle(color: Colors.redAccent)),
             ),
           ],
         );
@@ -589,10 +608,7 @@ class _PostCardState extends State<PostCard> {
                 trailing: widget.uid == widget.currentUserId
                     ? IconButton(
                         onPressed: confirmDelete,
-                        icon: Icon(
-                          Icons.more_vert,
-                          color: Colors.white,
-                        ),
+                        icon: Icon(Icons.more_vert, color: Colors.white),
                       )
                     : SizedBox(),
               ),
@@ -631,10 +647,7 @@ class _PostCardState extends State<PostCard> {
                             width: 35,
                             height: 35,
                             child: Center(
-                              child: CircularProgressIndicator(
-                                color: Colors.amber,
-                                strokeWidth: 2,
-                              ),
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             ),
                           );
                         }
@@ -751,6 +764,7 @@ class _PostCardState extends State<PostCard> {
                     ),
 
                     Spacer(),
+                    SizedBox(width: 50),
 
                     StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
                       stream: _firestore
@@ -761,15 +775,18 @@ class _PostCardState extends State<PostCard> {
                           .snapshots(),
                       builder: (context, snapshot) {
                         bool isSaved = snapshot.data?.exists ?? false;
+                        
 
                         return IconButton(
                           onPressed: savePost,
                           icon: SvgPicture.asset(
-                            'assets/icons/saved.svg',
-                            height: 25,
-                            width: 25,
+                            isSaved
+                                ? 'assets/icons/fillbookmark.svg'
+                                : 'assets/icons/unbookmark.svg',
+                            height: 22,
+                            width: 22,
                             colorFilter: ColorFilter.mode(
-                              isSaved ? Colors.amber : Colors.white,
+                              isSaved ? Colors.white : Colors.white,
                               BlendMode.srcIn,
                             ),
                           ),
@@ -784,10 +801,7 @@ class _PostCardState extends State<PostCard> {
                 padding: EdgeInsets.fromLTRB(15, 5, 15, 15),
                 child: RichText(
                   text: TextSpan(
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.white, fontSize: 14),
                     children: [
                       TextSpan(
                         text: '${user['user_name'] ?? 'User'} ',

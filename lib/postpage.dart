@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:socialmedia_project/services/cloudinary_service.dart';
@@ -40,17 +41,16 @@ class _PostpageState extends State<Postpage> {
   }
 
   Future<String?> uploadImage() async {
-    if (selectedImage == null) return imageUrl;
-
-    setState(() {
-      isLoading = true;
-    });
-
+    if (selectedImage == null) return null;
     try {
+      setState(() {
+        isUploading = true;
+      });
       final url = await CloudinaryService.uploadImage(selectedImage!);
       return url;
     } catch (e) {
-      debugPrint('Cloudinary upload error');
+      debugPrint('Cloudinary upload error:$e');
+      return null;
     } finally {
       if (mounted) {
         setState(() {
@@ -60,14 +60,66 @@ class _PostpageState extends State<Postpage> {
     }
   }
 
-  Future<void> createpost() async {
-    String? uploadedUrl = await uploadImage();
+  bool isPublishing = false;
 
-    await FirebaseFirestore.instance.collection('posts').add({
-      'image_url': imageUrl,
-      'createdAt': FieldValue.serverTimestamp(),
-      'reshareCount': 0,
+  Future<void> createpost() async {
+    if (selectedImage == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Please select a photo')));
+      return;
+    }
+
+    if (isPublishing) return;
+
+    setState(() {
+      isPublishing = true;
     });
+
+    try {
+      String? uploadedUrl = await uploadImage();
+
+      if (uploadedUrl == null || uploadedUrl.isEmpty) {
+        throw Exception('Image upload failed');
+      }
+
+      String uid = FirebaseAuth.instance.currentUser!.uid;
+
+      await _firestore.collection('posts').add({
+        'uid': uid,
+        'image_url': uploadedUrl,
+        'content': descriptioncontroller.text.trim(),
+        'createdAt': FieldValue.serverTimestamp(),
+        'reshareCount': 0,
+      });
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Post published successfully!')));
+
+      descriptioncontroller.clear();
+
+      setState(() {
+        selectedImage = null;
+        imageUrl = null;
+      });
+
+      widget.onPublished();
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Failed to publish: $e')));
+
+      debugPrint('POST ERROR: $e');
+    } finally {
+      if (mounted) {
+        setState(() {
+          isPublishing = false;
+        });
+      }
+    }
   }
 
   @override
@@ -80,13 +132,12 @@ class _PostpageState extends State<Postpage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF101010),
-
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF101010),
+        backgroundColor: Colors.black,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Create Post',
           style: TextStyle(
             color: Colors.white,
@@ -102,7 +153,7 @@ class _PostpageState extends State<Postpage> {
           children: [
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(12),
+              padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: Colors.black,
                 borderRadius: BorderRadius.circular(16),
@@ -113,14 +164,11 @@ class _PostpageState extends State<Postpage> {
                 children: [
                   Row(
                     children: [
-                      const Icon(
-                        Icons.photo_library_outlined,
-                        color: Colors.white,
-                      ),
+                      Icon(Icons.photo_library_outlined, color: Colors.white),
 
-                      const SizedBox(width: 10),
+                      SizedBox(width: 10),
 
-                      const Text(
+                      Text(
                         'Add Photo',
                         style: TextStyle(
                           color: Colors.white,
@@ -157,7 +205,7 @@ class _PostpageState extends State<Postpage> {
                           : Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Icon(
+                                Icon(
                                   Icons.add_photo_alternate_outlined,
                                   color: Colors.white,
                                   size: 55,
@@ -228,7 +276,7 @@ class _PostpageState extends State<Postpage> {
                     style: TextStyle(color: Colors.white, fontSize: 15),
                     decoration: InputDecoration(
                       hintText: 'Write something about your post...',
-                      hintStyle: const TextStyle(color: Colors.white38),
+                      hintStyle: TextStyle(color: Colors.white38),
                       filled: true,
                       fillColor: Color(0xFF292929),
                       contentPadding: EdgeInsets.all(14),
@@ -247,11 +295,13 @@ class _PostpageState extends State<Postpage> {
               height: 60,
 
               child: ButtonWidget(
-                text: "Publish",
-                backgroundColor: Colors.blueGrey,
+                text: isPublishing ? "Publishing..." : "Publish",
+                backgroundColor: Colors.orange.shade600,
+                textColor: Colors.white,
                 onPressed: () {
-                  widget.onPublished();
-                  createpost;
+                  if (!isPublishing) {
+                    createpost();
+                  }
                 },
               ),
             ),
