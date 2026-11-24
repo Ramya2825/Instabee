@@ -73,8 +73,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       if (userDoc.exists) {
         var user = userDoc.data() as Map<String, dynamic>;
-        nameController.text =  user['name'] ?? '';
-        usernameController.text =  user['username'] ?? user['user_name'] ?? '';
+        nameController.text = user['name'] ?? '';
+        usernameController.text = user['username'] ?? user['user_name'] ?? '';
         bioController.text = user['bio'] ?? '';
 
         imageUrl = user['profile_url'] ?? '';
@@ -143,15 +143,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
     bioController.dispose();
     super.dispose();
   }
+
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      child: Scaffold(
-        appBar: AppBar(title: Text('Edit Profile')),
-      
-        body: Padding(
+    return Scaffold(
+      appBar: AppBar(title: Text('Edit Profile')),
+      body: SingleChildScrollView(
+        child: Padding(
           padding: EdgeInsets.all(20),
-      
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -179,7 +178,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         backgroundColor: Colors.blue,
                         child: IconButton(
                           onPressed: isSaving ? null : pickImage,
-      
+
                           icon: Icon(Icons.edit, color: Colors.white, size: 20),
                         ),
                       ),
@@ -187,13 +186,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ],
                 ),
               ),
-              
+
               SizedBox(height: 20),
-      
+
               Text('Name', style: TextStyle(fontWeight: FontWeight.bold)),
-      
+
               SizedBox(height: 8),
-      
+
               TextField(
                 controller: nameController,
                 decoration: InputDecoration(
@@ -201,29 +200,29 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   border: OutlineInputBorder(),
                 ),
               ),
-      
+
               SizedBox(height: 15),
-      
+
               Text('Username', style: TextStyle(fontWeight: FontWeight.bold)),
-      
+
               SizedBox(height: 8),
-      
-             TextField(
-        controller: usernameController,
-        readOnly: true,
-        decoration: InputDecoration(
-      hintText: 'Username',
-      prefixText: '@',
-      border: OutlineInputBorder(),
-        ),
-      ),
-      
+
+              TextField(
+                controller: usernameController,
+                readOnly: true,
+                decoration: InputDecoration(
+                  hintText: 'Username',
+                  prefixText: '@',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+
               SizedBox(height: 15),
-      
+
               Text('Bio', style: TextStyle(fontWeight: FontWeight.bold)),
-      
+
               SizedBox(height: 8),
-      
+
               TextField(
                 controller: bioController,
                 maxLines: 2,
@@ -232,9 +231,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   border: OutlineInputBorder(),
                 ),
               ),
-      
+
               SizedBox(height: 20),
-      
+
               SizedBox(
                 child: ButtonWidget(
                   text: "Save Changes",
