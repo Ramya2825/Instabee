@@ -986,6 +986,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "15.4.0"
+  vonto_biometric:
+    dependency: "direct main"
+    description:
+      name: vonto_biometric
+      sha256: f3a2890c3ffc1e179f8f358541d45ede0065607a2466d303add4a26382799f3c
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.2"
   web:
     dependency: transitive
     description:
@@ -1028,4 +1036,4 @@ packages:
     version: "3.1.4"
 sdks:
   dart: ">=3.13.7 <4.0.0"
-  flutter: ">=3.47.0"
+  flutter: ">=3.47.8"

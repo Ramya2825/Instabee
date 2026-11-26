@@ -3,18 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:socialmedia_project/instabee.dart';
 import 'package:socialmedia_project/Logpages/register_page.dart';
-
 class Loginpage extends StatefulWidget {
   const Loginpage({super.key});
 
   @override
   State<Loginpage> createState() => _LoginpageState();
 }
-
 class _LoginpageState extends State<Loginpage> {
   final namecontroller = TextEditingController();
   final passwordcontroller = TextEditingController();
-
   final auth = FirebaseAuth.instance;
 
   bool isLoading = false;
@@ -106,29 +103,53 @@ class _LoginpageState extends State<Loginpage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: SingleChildScrollView(
-        child: SafeArea(
+      body: SafeArea(
+        child: SingleChildScrollView(
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 25, vertical: 35),
+            padding: EdgeInsets.symmetric(horizontal: 25, vertical: 25),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/icons/logo.png',
-                  height: 115,
-                  width: 125,
-                  fit: BoxFit.contain,
+                SizedBox(height: 45),
+                Center(
+                  child: RichText(
+                    text: TextSpan(
+                      children: [
+                        TextSpan(
+                          text: 'Insta',
+                          style: GoogleFonts.orbitron(
+                            fontSize: 25,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            letterSpacing: 1.5,
+                          ),
+                        ),
+                        TextSpan(
+                          text: 'Bee',
+                          style: GoogleFonts.orbitron(
+                            fontSize: 29,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.orange,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
 
+                SizedBox(height: 25),
                 Text(
                   'Welcome Back!',
+                  textAlign: TextAlign.center,
                   style: GoogleFonts.poppins(
-                    fontSize: 23,
+                    fontSize: 24,
                     fontWeight: FontWeight.w600,
                     color: Colors.white,
                   ),
                 ),
 
-                SizedBox(height: 5),
+                SizedBox(height: 6),
 
                 Text(
                   'Connect with friends & share your moments',
@@ -136,9 +157,8 @@ class _LoginpageState extends State<Loginpage> {
                   style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey),
                 ),
 
-                SizedBox(height: 18),
+                SizedBox(height: 28),
 
-                // LOGIN CARD
                 Container(
                   width: double.infinity,
                   padding: EdgeInsets.all(22),
@@ -151,6 +171,7 @@ class _LoginpageState extends State<Loginpage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // EMAIL
                       Text(
                         'Email Address',
                         style: GoogleFonts.poppins(
@@ -160,7 +181,7 @@ class _LoginpageState extends State<Loginpage> {
                         ),
                       ),
 
-                      SizedBox(height: 10),
+                      SizedBox(height: 9),
 
                       TextField(
                         controller: namecontroller,
@@ -183,8 +204,9 @@ class _LoginpageState extends State<Loginpage> {
                         ),
                       ),
 
-                      SizedBox(height: 15),
+                      SizedBox(height: 18),
 
+                      // PASSWORD
                       Text(
                         'Password',
                         style: GoogleFonts.poppins(
@@ -194,7 +216,7 @@ class _LoginpageState extends State<Loginpage> {
                         ),
                       ),
 
-                      SizedBox(height: 10),
+                      SizedBox(height: 9),
 
                       TextField(
                         controller: passwordcontroller,
@@ -230,6 +252,7 @@ class _LoginpageState extends State<Loginpage> {
                         ),
                       ),
 
+                      // FORGOT PASSWORD
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
@@ -245,7 +268,7 @@ class _LoginpageState extends State<Loginpage> {
                         ),
                       ),
 
-                      SizedBox(height: 10),
+                      SizedBox(height: 8),
 
                       // LOGIN BUTTON
                       SizedBox(
@@ -282,8 +305,9 @@ class _LoginpageState extends State<Loginpage> {
                         ),
                       ),
 
-                      SizedBox(height: 15),
+                      SizedBox(height: 22),
 
+                      // OR DIVIDER
                       Row(
                         children: [
                           Expanded(child: Divider(color: Colors.white24)),
@@ -301,8 +325,9 @@ class _LoginpageState extends State<Loginpage> {
                         ],
                       ),
 
-                      SizedBox(height: 15),
+                      SizedBox(height: 20),
 
+                      // FACEBOOK
                       Center(
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -324,7 +349,7 @@ class _LoginpageState extends State<Loginpage> {
                   ),
                 ),
 
-                SizedBox(height: 20),
+                SizedBox(height: 22),
 
                 // REGISTER
                 Row(

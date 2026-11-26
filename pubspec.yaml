@@ -19,10 +19,13 @@ dependencies:
   google_maps_flutter: ^2.19.0
   http: ^1.6.0
   image_picker: ^1.2.4
+
   mobile_scanner: ^7.5.0
   permission_handler: ^12.0.1
   qr_flutter: ^4.1.0
   typed_data: ^1.4.0
+  vonto_biometric: ^0.0.2
+ 
 
 dev_dependencies:
   flutter_test:

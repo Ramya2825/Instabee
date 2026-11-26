@@ -161,35 +161,27 @@ class PostCard extends StatefulWidget {
 
 class _PostCardState extends State<PostCard> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
   final TextEditingController commentController = TextEditingController();
-
   String get originalPostId {
     var data = widget.post.data();
-
     if (data['isReshare'] == true) {
       String? id = data['original_post_id'];
-
       if (id != null && id.isNotEmpty) {
         return id;
       }
     }
-
     return widget.postId;
   }
 
   Future<void> likePost() async {
     String myId = widget.currentUserId;
-
     var likeRef = _firestore
         .collection('posts')
         .doc(widget.postId)
         .collection('likes')
         .doc(myId);
-
     try {
       var likeDoc = await likeRef.get();
-
       if (likeDoc.exists) {
         await likeRef.delete();
       } else {
@@ -200,7 +192,6 @@ class _PostCardState extends State<PostCard> {
       }
     } catch (e) {
       if (!mounted) return;
-
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Like failed')));
     }
@@ -213,11 +204,8 @@ class _PostCardState extends State<PostCard> {
     setState(() {
       isResharing = true;
     });
-
     String uid = widget.currentUserId;
-
     var postRef = _firestore.collection('posts').doc(originalPostId);
-
     var reshareRef = _firestore
         .collection('users')
         .doc(uid)
@@ -232,12 +220,9 @@ class _PostCardState extends State<PostCard> {
       }
 
       var existing = await reshareRef.get();
-
       if (existing.exists) {
         await reshareRef.delete();
-
         await postRef.update({'reshareCount': FieldValue.increment(-1)});
-
         if (!mounted) return;
 
         ScaffoldMessenger.of(context)
@@ -250,9 +235,7 @@ class _PostCardState extends State<PostCard> {
         });
 
         await postRef.update({'reshareCount': FieldValue.increment(1)});
-
         if (!mounted) return;
-
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Post reshared Successfully')));
@@ -270,7 +253,6 @@ class _PostCardState extends State<PostCard> {
 
   Future<void> savePost() async {
     String uid = widget.currentUserId;
-
     var savedRef = _firestore
         .collection('users')
         .doc(uid)
@@ -279,7 +261,6 @@ class _PostCardState extends State<PostCard> {
 
     try {
       var saved = await savedRef.get();
-
       if (saved.exists) {
         await savedRef.delete();
       } else {
@@ -295,8 +276,8 @@ class _PostCardState extends State<PostCard> {
 
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Saved Collection')));
-    } finally{
-       if (!mounted) return;
+    } finally {
+      if (!mounted) return;
 
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('UnSaved Collection')));
@@ -333,9 +314,9 @@ class _PostCardState extends State<PostCard> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.black26,
+      backgroundColor: Colors.black,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(45)),
       ),
       builder: (bottomContext) {
         return Padding(
@@ -343,11 +324,10 @@ class _PostCardState extends State<PostCard> {
             bottom: MediaQuery.of(bottomContext).viewInsets.bottom,
           ),
           child: SizedBox(
-            height: MediaQuery.of(bottomContext).size.height * 0.65,
+            height: MediaQuery.of(bottomContext).size.height * 0.50,
             child: Column(
               children: [
                 SizedBox(height: 15),
-
                 Text(
                   'Comments',
                   style: TextStyle(
@@ -398,9 +378,7 @@ class _PostCardState extends State<PostCard> {
                         itemCount: comments.length,
                         itemBuilder: (context, index) {
                           var comment = comments[index];
-
                           String commentUid = comment.data()['uid'] ?? '';
-
                           if (commentUid.isEmpty) {
                             return SizedBox();
                           }
@@ -448,8 +426,6 @@ class _PostCardState extends State<PostCard> {
                   ),
                 ),
 
-                Divider(color: Colors.white24),
-
                 Padding(
                   padding: EdgeInsets.all(12),
                   child: Row(
@@ -470,7 +446,6 @@ class _PostCardState extends State<PostCard> {
                           ),
                         ),
                       ),
-
                       IconButton(
                         onPressed: commentPost,
                         icon: Icon(Icons.send, color: Colors.white),
@@ -775,7 +750,6 @@ class _PostCardState extends State<PostCard> {
                           .snapshots(),
                       builder: (context, snapshot) {
                         bool isSaved = snapshot.data?.exists ?? false;
-                        
 
                         return IconButton(
                           onPressed: savePost,

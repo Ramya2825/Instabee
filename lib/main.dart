@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:socialmedia_project/firebase_options.dart';
 import 'package:socialmedia_project/instabee.dart';
 import 'package:socialmedia_project/Logpages/loginpage.dart';
+import 'package:socialmedia_project/splash.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -17,15 +18,8 @@ class MainApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: checkAuth(),
+      home: SplashScreen(),
     );
   }
 
-  Widget checkAuth() {
-    final currentUser = FirebaseAuth.instance.currentUser;
-    if (currentUser != null) {
-      return  Socialmedia();
-    }
-    return Loginpage();
-  }
 }
