@@ -1,4 +1,4 @@
-# 🐝 InstaBee – Social Media Application
+# InstaBee – Social Media Application
 
 **InstaBee** is a Flutter-based social media application that allows users to connect, share photos, interact with posts, and explore location-based features. The application uses Firebase for authentication and database management, Cloudinary for image uploads, biometric authentication for secure access, and map integration for nearby locations.
 
