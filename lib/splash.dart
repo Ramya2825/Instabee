@@ -1,18 +1,15 @@
-
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:socialmedia_project/Logpages/loginpage.dart';
-import 'package:socialmedia_project/instabee.dart';
-import 'package:socialmedia_project/services/biometric_service.dart';
+import 'package:instabee/Logpages/loginpage.dart';
+import 'package:instabee/instabee.dart';
+import 'package:instabee/services/biometric_service.dart';
 import 'package:vonto_biometric/vonto_biometric.dart';
-
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
-
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
   final auth = FirebaseAuth.instance;

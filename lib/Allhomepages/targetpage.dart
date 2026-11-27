@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:socialmedia_project/widgets/button_widget.dart';
+import 'package:instabee/widgets/button_widget.dart';
 
 class Targetpage extends StatefulWidget {
   const Targetpage({super.key, required this.uid, required this.currentUserId});

@@ -2,11 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:socialmedia_project/Allprofilepages/qrpage.dart';
-import 'package:socialmedia_project/Allprofilepages/drawer.dart';
-import 'package:socialmedia_project/Allprofilepages/editpage.dart';
-import 'package:socialmedia_project/postpage.dart';
-import 'package:socialmedia_project/widgets/button_widget.dart';
+import 'package:instabee/Allprofilepages/qrpage.dart';
+import 'package:instabee/Allprofilepages/drawer.dart';
+import 'package:instabee/Allprofilepages/editpage.dart';
+import 'package:instabee/postpage.dart';
+import 'package:instabee/widgets/button_widget.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});

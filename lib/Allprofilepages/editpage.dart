@@ -1,9 +1,8 @@
 import 'dart:io';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:socialmedia_project/widgets/button_widget.dart';
+import 'package:instabee/widgets/button_widget.dart';
 
 import '../services/cloudinary_service.dart';
 

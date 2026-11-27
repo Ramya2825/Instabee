@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:socialmedia_project/Allhomepages/targetpage.dart';
-import 'package:socialmedia_project/services/nearby_service.dart';
+import 'package:instabee/Allhomepages/targetpage.dart';
+import 'package:instabee/services/nearby_service.dart';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
 

@@ -9,7 +9,7 @@
 
     
     <application
-        android:label="socialmedia_project"
+        android:label="InstaBee"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
     <meta-data

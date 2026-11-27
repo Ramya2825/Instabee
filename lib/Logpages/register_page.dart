@@ -2,8 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:socialmedia_project/instabee.dart';
-import 'package:socialmedia_project/Logpages/loginpage.dart';
+import 'package:instabee/instabee.dart';
+import 'package:instabee/Logpages/loginpage.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});

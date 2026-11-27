@@ -3,9 +3,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'package:socialmedia_project/Allhomepages/homepage.dart';
-import 'package:socialmedia_project/postpage.dart';
-import 'package:socialmedia_project/Allprofilepages/profilepage.dart';
+import 'package:instabee/Allhomepages/homepage.dart';
+import 'package:instabee/postpage.dart';
+import 'package:instabee/Allprofilepages/profilepage.dart';
 
 class Socialmedia extends StatefulWidget {
   const Socialmedia({super.key});

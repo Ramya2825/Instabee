@@ -1,8 +1,8 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:socialmedia_project/instabee.dart';
-import 'package:socialmedia_project/Logpages/register_page.dart';
+import 'package:instabee/instabee.dart';
+import 'package:instabee/Logpages/register_page.dart';
 class Loginpage extends StatefulWidget {
   const Loginpage({super.key});
 

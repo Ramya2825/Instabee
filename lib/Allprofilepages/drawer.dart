@@ -1,9 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:socialmedia_project/Allprofilepages/editpage.dart';
-import 'package:socialmedia_project/Allprofilepages/qrpage.dart';
-import 'package:socialmedia_project/Logpages/loginpage.dart';
+import 'package:instabee/Allprofilepages/editpage.dart';
+import 'package:instabee/Allprofilepages/qrpage.dart';
+import 'package:instabee/Logpages/loginpage.dart';
 
 class ProfileDrawer extends StatelessWidget {
   final String currentUserId;

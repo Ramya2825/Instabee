@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:socialmedia_project/Allhomepages/targetpage.dart';
-import 'package:socialmedia_project/map_page.dart';
+import 'package:instabee/Allhomepages/targetpage.dart';
+import 'package:instabee/map_page.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
